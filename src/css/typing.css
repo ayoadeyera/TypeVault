@@ -1,0 +1,364 @@
+/* ==========================================================================
+   TypeVault - Typing Arena & Character Rendering Styles
+   ========================================================================== */
+
+/* Main Arena Container */
+.typing-arena-wrapper {
+  position: relative;
+  width: 100%;
+  margin: 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  user-select: none;
+}
+
+.typing-arena {
+  position: relative;
+  width: 100%;
+  min-height: 180px;
+  max-height: 240px;
+  padding: 1.5rem 2rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(12px);
+  cursor: text;
+  overflow: hidden;
+  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.typing-arena:focus-within,
+.typing-arena.is-focused {
+  border-color: var(--border-focus);
+  box-shadow: var(--shadow-lg), 0 0 20px var(--color-accent-glow);
+}
+
+/* Hidden input that captures real mobile/desktop keystrokes and IME */
+.hidden-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Blur / Focus Overlay Hint */
+.arena-focus-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(11, 15, 25, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  z-index: 20;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-fast);
+  border-radius: var(--radius-lg);
+}
+
+.typing-arena.is-blurred .arena-focus-overlay {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.arena-focus-overlay .focus-hint-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-focus);
+  border-radius: var(--radius-full);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-sm);
+  animation: pulse-glow 2s infinite ease-in-out;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 10px var(--color-accent-glow); }
+  50% { box-shadow: 0 0 20px var(--color-accent-glow); }
+}
+
+/* Words & Text Container */
+.words-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  font-family: var(--font-mono);
+  font-size: 1.4rem;
+  line-height: 2.2;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
+  position: relative;
+}
+
+/* Code Mode layout with Line Numbers */
+.words-container.is-code {
+  font-size: 1.15rem;
+  line-height: 1.8;
+  white-space: pre;
+  display: block;
+}
+
+.code-line {
+  display: flex;
+  align-items: flex-start;
+  min-height: 1.8em;
+  width: 100%;
+}
+
+.code-line-number {
+  user-select: none;
+  color: var(--text-muted);
+  opacity: 0.45;
+  width: 3rem;
+  text-align: right;
+  padding-right: 1.25rem;
+  flex-shrink: 0;
+  font-size: 0.9em;
+}
+
+.code-line.is-active .code-line-number {
+  color: var(--color-accent);
+  opacity: 1;
+  font-weight: bold;
+}
+
+.code-line-content {
+  display: inline-flex;
+  flex-wrap: wrap;
+  flex-grow: 1;
+}
+
+/* Word Node */
+.word {
+  position: relative;
+  display: inline-flex;
+  margin-right: 0.6em;
+  margin-bottom: 0.2em;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-fast);
+}
+
+.word.is-error {
+  border-bottom: 2px wavy var(--color-incorrect);
+}
+
+/* Individual Character States */
+.char {
+  position: relative;
+  display: inline-block;
+  color: var(--text-muted);
+  transition: color 0.08s ease, background-color 0.08s ease, text-shadow 0.08s ease;
+}
+
+/* Untyped character */
+.char.untyped {
+  color: var(--text-muted);
+}
+
+/* Correctly typed character */
+.char.correct {
+  color: var(--color-correct);
+  text-shadow: 0 0 8px var(--color-correct-glow);
+}
+
+/* Incorrectly typed character */
+.char.incorrect {
+  color: var(--color-incorrect);
+  background-color: var(--color-incorrect-bg);
+  border-radius: 2px;
+  text-decoration: underline;
+  text-decoration-color: var(--color-incorrect);
+}
+
+/* Extra character typed beyond word length */
+.char.extra {
+  color: var(--color-extra);
+  background-color: var(--color-incorrect-bg);
+  opacity: 0.9;
+  border-radius: 2px;
+}
+
+/* Whitespace markers in Accuracy or Code mode */
+.char.space-marker {
+  position: relative;
+}
+
+.char.space-marker.incorrect {
+  background-color: var(--color-incorrect-bg);
+  color: var(--color-incorrect);
+}
+
+/* Newline Return Symbol */
+.char.newline-symbol {
+  font-size: 0.8em;
+  opacity: 0.5;
+  margin-left: 0.2em;
+}
+
+.char.newline-symbol.correct {
+  color: var(--color-correct);
+  opacity: 0.8;
+}
+
+.char.newline-symbol.incorrect {
+  color: var(--color-incorrect);
+  opacity: 1;
+}
+
+/* Tab Indent marker */
+.char.tab-space {
+  display: inline-block;
+  width: 1.5em;
+  position: relative;
+}
+
+/* Smooth Dynamic Animated Caret */
+.caret {
+  position: absolute;
+  pointer-events: none;
+  z-index: 15;
+  transition: left 0.08s cubic-bezier(0.1, 0.9, 0.2, 1), top 0.1s ease-out, height 0.1s ease;
+}
+
+/* Caret styles: Line */
+.caret.caret-line {
+  width: 2.5px;
+  background-color: var(--caret-color);
+  border-radius: 1px;
+  box-shadow: 0 0 10px var(--color-accent-glow), 0 0 2px var(--caret-color);
+  animation: caret-blink 1s infinite ease-in-out;
+}
+
+/* Caret styles: Block */
+.caret.caret-block {
+  width: 0.65em;
+  background-color: var(--caret-color);
+  opacity: 0.45;
+  border-radius: 2px;
+  animation: caret-blink-block 1s infinite ease-in-out;
+}
+
+/* Caret styles: Underline */
+.caret.caret-underline {
+  height: 3px !important;
+  width: 0.65em;
+  background-color: var(--caret-color);
+  border-radius: 2px;
+  box-shadow: 0 0 8px var(--color-accent-glow);
+  animation: caret-blink 1s infinite ease-in-out;
+}
+
+/* Hidden Caret */
+.caret.caret-hidden {
+  display: none;
+}
+
+@keyframes caret-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.15; }
+}
+
+@keyframes caret-blink-block {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.08; }
+}
+
+/* Pacer / Target Ghost indicator (optional) */
+.pacer-ghost {
+  position: absolute;
+  width: 2px;
+  background: var(--color-warning);
+  opacity: 0.6;
+  border-radius: 1px;
+  pointer-events: none;
+  z-index: 12;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.5);
+  transition: left 0.1s linear, top 0.1s linear;
+}
+
+/* Arena Bottom Controls / Hotkeys Quick Bar */
+.arena-quick-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.75rem 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.quick-keys-hints {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.key-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.key-badge kbd {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  padding: 0.15rem 0.45rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.btn-restart-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  transition: all var(--transition-fast);
+}
+
+.btn-restart-action:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+  border-color: var(--color-accent);
+  transform: translateY(-1px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .typing-arena {
+    min-height: 150px;
+    padding: 1rem 1.25rem;
+  }
+  .words-container {
+    font-size: 1.15rem;
+    line-height: 1.9;
+  }
+  .words-container.is-code {
+    font-size: 0.95rem;
+  }
+  .quick-keys-hints {
+    display: none;
+  }
+}
