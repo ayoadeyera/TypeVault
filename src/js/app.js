@@ -8,6 +8,7 @@ import { TypingEngine } from './engine.js';
 import { ThemeManager, THEMES, FONTS, CARET_STYLES } from './themes.js';
 import { Sound } from './sound.js';
 import { AnalyticsTracker } from './analytics.js';
+import { AuthManager } from './auth.js';
 
 class TypeVaultApp {
   constructor() {
@@ -22,6 +23,9 @@ class TypeVaultApp {
     this.initUIListeners();
     this.renderSubControls();
     this.startNewDrill();
+
+    // Auth manager — self-wires its own DOM events and manages auth state
+    this.authManager = new AuthManager({ onToast: (msg) => this.showToast(msg) });
   }
 
   initDOM() {
@@ -90,7 +94,10 @@ class TypeVaultApp {
       savedSnippetsList: document.getElementById('saved-snippets-list'),
 
       // Toast
-      toastContainer: document.getElementById('toast-container')
+      toastContainer: document.getElementById('toast-container'),
+
+      // Cloud sync badge in results modal
+      cloudSyncBadge: document.getElementById('cloud-sync-badge')
     };
   }
 
@@ -170,6 +177,7 @@ class TypeVaultApp {
         this.closeResultsModal();
         this.closeSettingsDrawer();
         this.closeCustomModal();
+        this.authManager?.closeModal();
       }
     });
 
@@ -436,11 +444,11 @@ class TypeVaultApp {
     this.dom.sessionProgressFill.style.width = `${metrics.progress}%`;
   }
 
-  handleEngineComplete(results) {
-    // Save to storage
+  async handleEngineComplete(results) {
+    // 1. Save locally (always, even for guests)
     Storage.saveSessionScore(results);
 
-    // Populate Results Modal
+    // 2. Populate Results Modal
     this.dom.resWpm.textContent = results.wpm;
     this.dom.resRawWpm.textContent = results.rawWpm;
     this.dom.resAcc.textContent = `${results.accuracy}%`;
@@ -451,11 +459,22 @@ class TypeVaultApp {
     this.dom.resExtraChars.textContent = results.extraCharacters;
     this.dom.resMissedChars.textContent = results.missedCharacters;
 
-    // Render SVG performance sparkline
+    // 3. Reset cloud badge from previous session
+    if (this.dom.cloudSyncBadge) this.dom.cloudSyncBadge.hidden = true;
+
+    // 4. Render SVG performance sparkline
     AnalyticsTracker.renderSvgChart(results.samples, this.dom.chartContainer);
 
-    // Open Modal
+    // 5. Open Modal immediately — don't wait for cloud
     this.openResultsModal();
+
+    // 6. Cloud sync (non-blocking — badge appears after modal is open)
+    if (this.authManager?.getCurrentUser()) {
+      const { success } = await Storage.syncSessionToCloud(results, this.settings.activeMode);
+      if (success && this.dom.cloudSyncBadge) {
+        this.dom.cloudSyncBadge.hidden = false;
+      }
+    }
   }
 
   openResultsModal() {

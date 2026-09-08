@@ -3,6 +3,7 @@
    ========================================================================== */
 
 import { DEFAULT_CUSTOM_SNIPPETS } from './modes.js';
+import { supabase } from './supabase.js';
 
 const STORAGE_KEYS = {
   SETTINGS: 'typevault_settings',
@@ -172,5 +173,36 @@ export const Storage = {
       console.warn("Could not load personal best:", e);
     }
     return null;
+  },
+
+  /**
+   * Sync a completed session to the Supabase `typing_sessions` table.
+   * Only call this when a user is authenticated.
+   * @returns {{ success: boolean, error?: string }}
+   */
+  async syncSessionToCloud(results, mode) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return { success: false, error: 'Not authenticated' };
+
+      const { error } = await supabase
+        .from('typing_sessions')
+        .insert({
+          user_id:          user.id,
+          mode:             mode || 'speed',
+          wpm:              results.wpm,
+          raw_cpm:          results.rawCpm,
+          accuracy:         results.accuracy,
+          errors:           results.errorKeystrokes,
+          duration_seconds: parseFloat(results.timeSeconds)
+        });
+
+      if (error) throw error;
+      return { success: true };
+    } catch (e) {
+      console.warn('TypeVault: Cloud sync failed:', e.message);
+      return { success: false, error: e.message };
+    }
   }
 };
+

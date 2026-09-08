@@ -834,3 +834,283 @@ input:checked + .toggle-slider:before {
     max-width: 100%;
   }
 }
+
+/* --------------------------------------------------------------------------
+   Auth: Sign In Button & User Badge
+   -------------------------------------------------------------------------- */
+
+/* "Sign In" pill button in the header */
+.btn-auth {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 1rem;
+  background: transparent;
+  border: 1px solid var(--border-focus);
+  border-radius: var(--radius-full);
+  color: var(--color-accent);
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.btn-auth:hover {
+  background: var(--color-accent);
+  color: #ffffff;
+  box-shadow: 0 4px 14px var(--color-accent-glow);
+  transform: translateY(-1px);
+}
+
+/* User profile badge (replaces Sign In when authenticated) */
+.user-badge {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.75rem 0.35rem 0.4rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-focus);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 0 10px var(--color-accent-glow);
+}
+
+.user-badge:hover {
+  background: var(--bg-surface-hover);
+}
+
+.user-initial-circle {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-hover));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.user-email-text {
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Dropdown menu from the user badge */
+.user-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  min-width: 210px;
+  z-index: 150;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-6px) scale(0.97);
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+.user-dropdown.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.user-dropdown-header {
+  padding: 0.7rem 1rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-subtle);
+  word-break: break-all;
+}
+
+.user-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  text-align: left;
+}
+
+.user-dropdown-item:hover {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+.user-dropdown-item.signout {
+  color: var(--color-incorrect);
+}
+
+.user-dropdown-item.signout:hover {
+  background: var(--color-incorrect-bg);
+}
+
+/* --------------------------------------------------------------------------
+   Auth Modal — Form, Tabs, Google Button
+   -------------------------------------------------------------------------- */
+
+.auth-modal-content {
+  max-width: 430px;
+}
+
+/* Tab bar */
+.auth-tabs {
+  display: flex;
+  gap: 0;
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  padding: 0.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 0.55rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: all var(--transition-fast);
+}
+
+.auth-tab.active {
+  background: var(--bg-secondary);
+  color: var(--color-accent);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Form layout */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.auth-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+/* Styled text inputs */
+.auth-input {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.auth-input:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--color-accent-glow);
+}
+
+.auth-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Inline error / success message */
+.auth-error {
+  font-size: 0.82rem;
+  color: var(--color-incorrect);
+  font-weight: 500;
+  min-height: 1.1em;
+  line-height: 1.4;
+}
+
+/* Full-width primary submit button */
+.auth-submit-btn {
+  width: 100%;
+  justify-content: center;
+  font-size: 0.95rem;
+  padding: 0.8rem 1.5rem;
+}
+
+/* "or" divider between form and OAuth */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-subtle);
+}
+
+/* Google OAuth button */
+.auth-google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+.auth-google-btn:hover {
+  background: var(--bg-surface-hover);
+  border-color: rgba(66, 133, 244, 0.45);
+  box-shadow: 0 2px 12px rgba(66, 133, 244, 0.2);
+}
+
+/* --------------------------------------------------------------------------
+   Cloud Synced Badge (results modal)
+   -------------------------------------------------------------------------- */
+.cloud-synced-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.8rem;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: var(--radius-full);
+  color: var(--color-correct);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+  animation: cloud-badge-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes cloud-badge-in {
+  from { opacity: 0; transform: scale(0.8) translateY(4px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
