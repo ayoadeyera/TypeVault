@@ -1,0 +1,114 @@
+<%- include('../partials/header') %>
+<%- include('../partials/nav') %>
+
+<main class="page-container">
+  <!-- Hero Section -->
+  <section class="page-hero">
+    <div class="page-badge">Official PluralTech Support</div>
+    <h1 class="page-title">Get in Touch with Our Team</h1>
+    <p class="page-lead">
+      Have questions, feedback, enterprise inquiries, or feature suggestions for Type Station? We're here to help you accelerate your developer typing journey.
+    </p>
+  </section>
+
+  <!-- Contact Form & Info Grid -->
+  <div class="contact-grid">
+    <!-- Left Column: Support Info & WhatsApp Button -->
+    <div class="content-card contact-info-card">
+      <div>
+        <h2>Contact Details</h2>
+        <p>Direct assistance from the PluralTech LTD engineering and support team.</p>
+      </div>
+
+      <!-- WhatsApp Official Support -->
+      <div class="contact-method">
+        <div class="contact-method-icon">💬</div>
+        <div class="contact-method-details">
+          <h4>WhatsApp Direct Support</h4>
+          <p>Instant chat with our product specialists.</p>
+          <p style="font-family: var(--font-mono); font-weight: 700; color: var(--color-accent); margin-top: 0.25rem;">+2349032218901</p>
+          <a href="https://wa.me/2349032218901" target="_blank" rel="noopener noreferrer" class="btn-whatsapp">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.312.045-.634.072-1.895-.447-1.503-.618-2.519-2.147-2.593-2.247-.074-.1-1.229-1.636-1.229-3.12 0-1.485.778-2.215 1.054-2.516.276-.3.602-.375.803-.375.201 0 .402.002.576.01.185.008.434-.07.68.522.253.608.863 2.108.939 2.261.076.153.126.331.026.531-.1.2-.15.324-.298.5-.148.175-.314.391-.448.525-.15.15-.306.314-.132.613.174.299.774 1.277 1.662 2.067 1.143 1.018 2.106 1.334 2.407 1.484.301.149.477.125.653-.075.176-.2.753-.876.953-1.176.201-.3.402-.25.677-.15.276.1.1.753 1.758 1.478 2.233.151.226.252.376.289.451.038.075.038.438-.106.843z"/>
+            </svg>
+            Chat on WhatsApp
+          </a>
+        </div>
+      </div>
+
+      <!-- Email Support -->
+      <div class="contact-method">
+        <div class="contact-method-icon">✉️</div>
+        <div class="contact-method-details">
+          <h4>Email Inquiries</h4>
+          <p>support@typestation.dev / team@pluraltech.ltd</p>
+          <span style="font-size: 0.8rem; color: var(--text-muted)">Average response time: &lt; 24 business hours</span>
+        </div>
+      </div>
+
+      <!-- Corporate Office -->
+      <div class="contact-method">
+        <div class="contact-method-icon">🏢</div>
+        <div class="contact-method-details">
+          <h4>PluralTech LTD</h4>
+          <p>Global Software & Developer Tools Division</p>
+          <span style="font-size: 0.8rem; color: var(--text-muted)">Support Hours: Monday – Saturday, 8:00 AM – 8:00 PM (WAT)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Express-Validator Form -->
+    <div class="content-card">
+      <div>
+        <h2>Send Us a Message</h2>
+        <p>Fill out the form below and our team will get back to you promptly.</p>
+      </div>
+
+      <!-- Feedback Alerts -->
+      <% if (typeof successMessage !== 'undefined' && successMessage) { %>
+        <div class="alert-box alert-success" role="alert">
+          ✓ <%= successMessage %>
+        </div>
+      <% } %>
+
+      <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
+        <div class="alert-box alert-error" role="alert">
+          <strong>Please correct the following:</strong>
+          <ul style="margin-top: 0.4rem; padding-left: 1.2rem;">
+            <% errors.forEach(err => { %>
+              <li><%= err.msg %></li>
+            <% }) %>
+          </ul>
+        </div>
+      <% } %>
+
+      <form action="/contact" method="POST" style="display: flex; flex-direction: column; gap: 1.2rem;">
+        <div class="form-group">
+          <label for="contact-name">Full Name *</label>
+          <input type="text" id="contact-name" name="name" class="form-input" placeholder="Alex Morgan" value="<%= typeof formData !== 'undefined' && formData.name ? formData.name : '' %>" required>
+        </div>
+
+        <div class="form-group">
+          <label for="contact-email">Email Address *</label>
+          <input type="email" id="contact-email" name="email" class="form-input" placeholder="alex@developer.io" value="<%= typeof formData !== 'undefined' && formData.email ? formData.email : '' %>" required>
+        </div>
+
+        <div class="form-group">
+          <label for="contact-subject">Inquiry Subject *</label>
+          <input type="text" id="contact-subject" name="subject" class="form-input" placeholder="Feature Request, Bug Report, Partnership" value="<%= typeof formData !== 'undefined' && formData.subject ? formData.subject : '' %>" required>
+        </div>
+
+        <div class="form-group">
+          <label for="contact-message">Your Message *</label>
+          <textarea id="contact-message" name="message" class="form-textarea" placeholder="Describe your inquiry or feedback in detail..." required><%= typeof formData !== 'undefined' && formData.message ? formData.message : '' %></textarea>
+        </div>
+
+        <button type="submit" class="btn-primary" style="justify-content: center; padding: 0.85rem 1.75rem;">
+          <span>📨</span> Send Inquiry
+        </button>
+      </form>
+    </div>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>

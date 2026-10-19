@@ -72,3 +72,107 @@ export async function getCurrentUser() {
   const { data: { user } } = await supabase.auth.getUser();
   return user;
 }
+
+// ─── Goal & Diagnostic Cloud Sync Helpers ─────────────────────────────────────
+
+/**
+ * Upsert user goal settings into the `user_goals` table.
+ */
+export async function upsertUserGoals(goals) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { data: null, error: 'User not authenticated' };
+
+    const payload = {
+      user_id: user.id,
+      daily_minutes: goals.dailyMinutes,
+      weekly_minutes: goals.weeklyMinutes,
+      monthly_minutes: goals.monthlyMinutes,
+      target_wpm_speed: goals.targetWpmSpeed,
+      target_wpm_accuracy: goals.targetWpmAccuracy,
+      target_wpm_code: goals.targetWpmCode,
+      target_accuracy: goals.targetAccuracy,
+      updated_at: new Date().toISOString()
+    };
+
+    const { data, error } = await supabase
+      .from('user_goals')
+      .upsert(payload, { onConflict: 'user_id' })
+      .select();
+
+    return { data, error };
+  } catch (e) {
+    console.warn('TypeVault: upsertUserGoals error:', e);
+    return { data: null, error: e };
+  }
+}
+
+/**
+ * Fetch user goal settings from the `user_goals` table.
+ */
+export async function getUserGoals() {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { data: null, error: 'User not authenticated' };
+
+    const { data, error } = await supabase
+      .from('user_goals')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    return { data, error };
+  } catch (e) {
+    console.warn('TypeVault: getUserGoals error:', e);
+    return { data: null, error: e };
+  }
+}
+
+/**
+ * Upsert cumulative character error analytics into `character_analytics` table.
+ * Supports storing character metrics either as aggregated rows or json payload.
+ */
+export async function upsertCharacterAnalytics(charData) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { data: null, error: 'User not authenticated' };
+
+    const payload = {
+      user_id: user.id,
+      analytics_data: charData,
+      updated_at: new Date().toISOString()
+    };
+
+    const { data, error } = await supabase
+      .from('character_analytics')
+      .upsert(payload, { onConflict: 'user_id' })
+      .select();
+
+    return { data, error };
+  } catch (e) {
+    console.warn('TypeVault: upsertCharacterAnalytics error:', e);
+    return { data: null, error: e };
+  }
+}
+
+/**
+ * Fetch character analytics from `character_analytics` table.
+ */
+export async function getCharacterAnalytics() {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { data: null, error: 'User not authenticated' };
+
+    const { data, error } = await supabase
+      .from('character_analytics')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    return { data, error };
+  } catch (e) {
+    console.warn('TypeVault: getCharacterAnalytics error:', e);
+    return { data: null, error: e };
+  }
+}
+

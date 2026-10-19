@@ -3,13 +3,16 @@
    ========================================================================== */
 
 import { DEFAULT_CUSTOM_SNIPPETS } from './modes.js';
-import { supabase } from './supabase.js';
+import { supabase, upsertUserGoals, getUserGoals, upsertCharacterAnalytics, getCharacterAnalytics } from './supabase.js';
 
 const STORAGE_KEYS = {
   SETTINGS: 'typevault_settings',
   SNIPPETS: 'typevault_custom_snippets',
   HISTORY: 'typevault_session_history',
-  PERSONAL_BEST: 'typevault_personal_best'
+  PERSONAL_BEST: 'typevault_personal_best',
+  GOALS: 'typevault_user_goals',
+  DURATION_LOGS: 'typevault_duration_logs',
+  CHAR_ANALYTICS: 'typevault_character_analytics'
 };
 
 const DEFAULT_SETTINGS = {
@@ -202,6 +205,185 @@ export const Storage = {
     } catch (e) {
       console.warn('TypeVault: Cloud sync failed:', e.message);
       return { success: false, error: e.message };
+    }
+  },
+
+  // ─── Goal Management & Duration Tracking ─────────────────────────────────
+
+  /**
+   * Load user goal settings from localStorage
+   */
+  getGoals() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.GOALS);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {
+      console.warn('Could not load goals from localStorage:', e);
+    }
+    return null;
+  },
+
+  /**
+   * Save user goal settings to localStorage
+   */
+  saveGoals(goals) {
+    try {
+      localStorage.setItem(STORAGE_KEYS.GOALS, JSON.stringify(goals));
+    } catch (e) {
+      console.warn('Could not save goals to localStorage:', e);
+    }
+  },
+
+  /**
+   * Get all duration logs by date { 'YYYY-MM-DD': totalSeconds }
+   */
+  getDurationLogs() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.DURATION_LOGS);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {
+      console.warn('Could not load duration logs:', e);
+    }
+    return {};
+  },
+
+  /**
+   * Save duration logs to localStorage
+   */
+  saveDurationLogs(logs) {
+    try {
+      localStorage.setItem(STORAGE_KEYS.DURATION_LOGS, JSON.stringify(logs));
+    } catch (e) {
+      console.warn('Could not save duration logs:', e);
+    }
+  },
+
+  /**
+   * Add practice duration in seconds for today's date
+   */
+  addPracticeDuration(seconds) {
+    const logs = this.getDurationLogs();
+    const today = new Date();
+    const y = today.getFullYear();
+    const m = String(today.getMonth() + 1).padStart(2, '0');
+    const d = String(today.getDate()).padStart(2, '0');
+    const key = `${y}-${m}-${d}`;
+
+    logs[key] = (logs[key] || 0) + Math.round(seconds);
+    this.saveDurationLogs(logs);
+    return logs;
+  },
+
+  /**
+   * Sync goals to Supabase if logged in
+   */
+  async syncGoalsToCloud(goals) {
+    try {
+      const res = await upsertUserGoals(goals);
+      return res;
+    } catch (e) {
+      console.warn('TypeVault: syncGoalsToCloud error:', e);
+      return { error: e };
+    }
+  },
+
+  // ─── Character Error Analytics ──────────────────────────────────────────
+
+  /**
+   * Get cumulative character analytics: { [char]: { errors: number, total: number } }
+   */
+  getCharacterAnalytics() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.CHAR_ANALYTICS);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {
+      console.warn('Could not load character analytics:', e);
+    }
+    return {};
+  },
+
+  /**
+   * Save cumulative character analytics to localStorage
+   */
+  saveCharacterAnalytics(data) {
+    try {
+      localStorage.setItem(STORAGE_KEYS.CHAR_ANALYTICS, JSON.stringify(data));
+    } catch (e) {
+      console.warn('Could not save character analytics:', e);
+    }
+  },
+
+  /**
+   * Record errors and attempts from a completed session
+   */
+  recordCharacterStats(errorLog = {}, charStats = {}) {
+    const cumulative = this.getCharacterAnalytics();
+
+    // Incorporate detailed keystroke stats if available
+    Object.keys(charStats).forEach(key => {
+      if (!cumulative[key]) {
+        cumulative[key] = { errors: 0, total: 0 };
+      }
+      cumulative[key].total += (charStats[key].total || 0);
+      cumulative[key].errors += (charStats[key].errors || 0);
+    });
+
+    // Also ensure any keys from errorLog are accounted for
+    Object.keys(errorLog).forEach(key => {
+      if (!cumulative[key]) {
+        cumulative[key] = { errors: 0, total: errorLog[key] };
+      } else if (!charStats[key]) {
+        cumulative[key].errors += errorLog[key];
+        cumulative[key].total = Math.max(cumulative[key].total, cumulative[key].errors);
+      }
+    });
+
+    this.saveCharacterAnalytics(cumulative);
+
+    // Sync to cloud asynchronously if authenticated
+    this.syncCharacterAnalyticsToCloud(cumulative);
+
+    return cumulative;
+  },
+
+  /**
+   * Sync character analytics to Supabase
+   */
+  async syncCharacterAnalyticsToCloud(charData) {
+    try {
+      const res = await upsertCharacterAnalytics(charData);
+      return res;
+    } catch (e) {
+      console.warn('TypeVault: syncCharacterAnalyticsToCloud error:', e);
+      return { error: e };
+    }
+  },
+
+  /**
+   * Pull cloud goals and character analytics on user login
+   */
+  async fetchCloudGoalsAndAnalytics() {
+    try {
+      const goalsRes = await getUserGoals();
+      if (goalsRes?.data) {
+        const cloudGoals = {
+          dailyMinutes: goalsRes.data.daily_minutes,
+          weeklyMinutes: goalsRes.data.weekly_minutes,
+          monthlyMinutes: goalsRes.data.monthly_minutes,
+          targetWpmSpeed: goalsRes.data.target_wpm_speed,
+          targetWpmAccuracy: goalsRes.data.target_wpm_accuracy,
+          targetWpmCode: goalsRes.data.target_wpm_code,
+          targetAccuracy: goalsRes.data.target_accuracy
+        };
+        this.saveGoals(cloudGoals);
+      }
+
+      const charRes = await getCharacterAnalytics();
+      if (charRes?.data?.analytics_data) {
+        this.saveCharacterAnalytics(charRes.data.analytics_data);
+      }
+    } catch (e) {
+      console.warn('TypeVault: fetchCloudGoalsAndAnalytics failed:', e);
     }
   }
 };

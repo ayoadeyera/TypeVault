@@ -1,0 +1,121 @@
+    <!-- App Navigation Header -->
+    <header class="app-header">
+      <a href="/" class="brand-wrapper" title="Type Station — A PluralTech Product">
+        <div class="brand-logo" id="brand-logo">
+          <div class="brand-icon-svg">
+            <img src="/images/logo.svg" alt="Type Station Logo" width="40" height="40">
+          </div>
+          <div class="brand-meta">
+            <span class="brand-name">Type Station</span>
+            <span class="brand-sub">A PluralTech Product</span>
+          </div>
+          <span class="brand-tag">v2.5 PRO</span>
+        </div>
+      </a>
+
+      <!-- Desktop Nav Menu Links -->
+      <nav class="desktop-nav-menu" aria-label="Main Navigation">
+        <a href="/" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'arena' ? 'active' : '' %>">Practice Arena</a>
+        <a href="/about" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'about' ? 'active' : '' %>">About Us</a>
+        <a href="/contact" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'contact' ? 'active' : '' %>">Contact Us</a>
+        <a href="/#goals" id="nav-goals" class="nav-link">Goals/Insights</a>
+      </nav>
+
+      <div class="header-actions">
+        <!-- Auth: Sign In button (guest) -->
+        <button id="btn-auth" class="btn-auth" title="Sign in to sync stats to the cloud" aria-label="Sign In" style="<%= typeof user !== 'undefined' && user ? 'display:none' : 'display:inline-flex' %>">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span>Sign In</span>
+        </button>
+
+        <!-- User badge (shown when authenticated) -->
+        <div id="user-badge" class="user-badge" style="<%= typeof user !== 'undefined' && user ? 'display:flex' : 'display:none' %>" title="Account & Sign Out">
+          <div class="user-initial-circle" id="user-initial"><%= typeof user !== 'undefined' && user ? (user.username || user.email || '?').charAt(0).toUpperCase() : '?' %></div>
+          <span id="user-email-text" class="user-email-text"><%= typeof user !== 'undefined' && user ? (user.username || user.email) : 'Guest' %></span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+          <div id="user-dropdown" class="user-dropdown" role="menu">
+            <div class="user-dropdown-header" id="user-dropdown-email"><%= typeof user !== 'undefined' && user ? user.email : '' %></div>
+            <button id="btn-signout" class="user-dropdown-item signout" role="menuitem">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
+              Sign Out
+            </button>
+          </div>
+        </div>
+
+        <!-- Goals & Insights Button -->
+        <button id="btn-open-goals" class="btn-goals" title="Goals, Diagnostics & Analytics" aria-label="Goals and Insights">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <circle cx="12" cy="12" r="6"></circle>
+            <circle cx="12" cy="12" r="2"></circle>
+          </svg>
+          <span>Goals</span>
+          <span class="goal-header-badge" id="header-goal-badge">0%</span>
+        </button>
+
+        <button id="btn-open-custom" class="btn-icon" title="Custom Sandbox & Snippet Manager" aria-label="Custom Sandbox">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"></path>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+          </svg>
+        </button>
+
+        <button id="btn-open-settings" class="btn-icon" title="Settings & Visual Themes" aria-label="Settings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+
+        <!-- Responsive Mobile Hamburger Toggle -->
+        <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Toggle Mobile Navigation Menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Mobile Slide-out Drawer & Backdrop -->
+    <div id="mobile-menu-backdrop" class="mobile-menu-backdrop"></div>
+    <div id="mobile-menu-drawer" class="mobile-menu-drawer">
+      <div class="mobile-drawer-header">
+        <div class="brand-logo">
+          <img src="/images/logo.svg" alt="Type Station Logo" width="28" height="28">
+          <span class="brand-name" style="font-size: 1.15rem;">Type Station</span>
+        </div>
+        <button id="mobile-menu-close" class="mobile-drawer-close" aria-label="Close Mobile Navigation">✕</button>
+      </div>
+
+      <nav class="mobile-nav-links">
+        <a href="/" class="mobile-nav-link <%= typeof activePage !== 'undefined' && activePage === 'arena' ? 'active' : '' %>">
+          <span>⚡</span> Practice Arena
+        </a>
+        <a href="/about" class="mobile-nav-link <%= typeof activePage !== 'undefined' && activePage === 'about' ? 'active' : '' %>">
+          <span>📖</span> About Us
+        </a>
+        <a href="/contact" class="mobile-nav-link <%= typeof activePage !== 'undefined' && activePage === 'contact' ? 'active' : '' %>">
+          <span>💬</span> Contact Us
+        </a>
+        <a href="/#goals" id="mobile-nav-goals" class="mobile-nav-link">
+          <span>🎯</span> Goals / Insights
+        </a>
+        <button id="mobile-btn-auth" class="mobile-nav-link" style="border:none; background:transparent; width:100%; text-align:left; cursor:pointer;">
+          <span>👤</span> <%= typeof user !== 'undefined' && user ? `Account (${user.username || user.email})` : 'Sign In / Account' %>
+        </button>
+      </nav>
+
+      <div class="mobile-nav-badge">
+        <strong>Type Station</strong><br>
+        A Product of PluralTech LTD
+      </div>
+    </div>

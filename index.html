@@ -57,6 +57,17 @@
           </div>
         </div>
 
+        <!-- Goals & Insights Button -->
+        <button id="btn-open-goals" class="btn-goals" title="Goals, Diagnostics & Analytics" aria-label="Goals and Insights">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <circle cx="12" cy="12" r="6"></circle>
+            <circle cx="12" cy="12" r="2"></circle>
+          </svg>
+          <span>Goals</span>
+          <span class="goal-header-badge" id="header-goal-badge">0%</span>
+        </button>
+
         <button id="btn-open-custom" class="btn-icon" title="Custom Sandbox & Snippet Manager" aria-label="Custom Sandbox">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 20h9"></path>
@@ -145,6 +156,23 @@
       <!-- Target/Session Progress Bar -->
       <div class="session-progress-bar" title="Session Completion Progress">
         <div class="session-progress-fill" id="session-progress-fill"></div>
+      </div>
+
+      <!-- Live Daily Duration Goal Bar -->
+      <div class="goal-live-hud" id="goal-live-hud" title="Daily Practice Goal Progress (Active Drill)">
+        <div class="goal-live-info">
+          <div class="goal-live-title">
+            <span class="goal-live-icon">🎯</span>
+            <span class="goal-live-label">Daily Goal:</span>
+            <strong id="live-goal-time">0.0 / 15 mins</strong>
+          </div>
+          <div class="goal-live-percent">
+            <span id="live-goal-pct">0%</span>
+          </div>
+        </div>
+        <div class="goal-live-track">
+          <div class="goal-live-fill" id="live-goal-fill" style="width: 0%"></div>
+        </div>
       </div>
 
       <!-- Typing Arena -->
@@ -440,6 +468,151 @@
             </svg>
             Continue with Google
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Goals & Insights Modal -->
+    <div class="modal-backdrop" id="goals-modal" role="dialog" aria-modal="true" aria-labelledby="goals-modal-title">
+      <div class="modal-content goals-modal-content">
+        <div class="modal-header">
+          <div class="modal-title" id="goals-modal-title">
+            <span>🎯</span> Goals & Diagnostic Insights
+          </div>
+          <button class="modal-close-btn" id="goals-modal-close" aria-label="Close modal">✕</button>
+        </div>
+
+        <div class="goals-modal-body">
+          <!-- Section 1: Active Duration Targets -->
+          <div class="goals-section">
+            <div class="goals-section-header">
+              <h3 class="goals-section-title">Active Duration Targets</h3>
+              <span class="goals-section-sub">Practice time logged across rolling windows</span>
+            </div>
+            <div class="goals-progress-grid">
+              <!-- Daily Card -->
+              <div class="goal-window-card" id="card-goal-daily">
+                <div class="goal-window-top">
+                  <span class="goal-window-badge">Daily Target</span>
+                  <span class="goal-window-pct" id="modal-daily-pct">0%</span>
+                </div>
+                <div class="goal-window-metric">
+                  <span class="goal-metric-value" id="modal-daily-curr">0.0</span>
+                  <span class="goal-metric-sep">/</span>
+                  <span class="goal-metric-target" id="modal-daily-target">15 mins</span>
+                </div>
+                <div class="goal-window-bar">
+                  <div class="goal-window-fill" id="modal-daily-fill" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <!-- Weekly Card -->
+              <div class="goal-window-card" id="card-goal-weekly">
+                <div class="goal-window-top">
+                  <span class="goal-window-badge">Weekly (7 Days)</span>
+                  <span class="goal-window-pct" id="modal-weekly-pct">0%</span>
+                </div>
+                <div class="goal-window-metric">
+                  <span class="goal-metric-value" id="modal-weekly-curr">0.0</span>
+                  <span class="goal-metric-sep">/</span>
+                  <span class="goal-metric-target" id="modal-weekly-target">75 mins</span>
+                </div>
+                <div class="goal-window-bar">
+                  <div class="goal-window-fill" id="modal-weekly-fill" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <!-- Monthly Card -->
+              <div class="goal-window-card" id="card-goal-monthly">
+                <div class="goal-window-top">
+                  <span class="goal-window-badge">Monthly (30 Days)</span>
+                  <span class="goal-window-pct" id="modal-monthly-pct">0%</span>
+                </div>
+                <div class="goal-window-metric">
+                  <span class="goal-metric-value" id="modal-monthly-curr">0.0</span>
+                  <span class="goal-metric-sep">/</span>
+                  <span class="goal-metric-target" id="modal-monthly-target">300 mins</span>
+                </div>
+                <div class="goal-window-bar">
+                  <div class="goal-window-fill" id="modal-monthly-fill" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Diagnostics & Weak Spots -->
+          <div class="goals-section">
+            <div class="goals-section-header">
+              <h3 class="goals-section-title">Diagnostic & Weak-Spot Analyzer</h3>
+              <span class="goals-section-sub">Character error mapping and automated performance coaching</span>
+            </div>
+
+            <!-- Weakest Keys Chips -->
+            <div class="weak-keys-container">
+              <div class="weak-keys-title">
+                <span>⚠️</span> Top Weakest Keys:
+              </div>
+              <div class="weak-keys-list" id="weak-keys-list">
+                <!-- Populated dynamically -->
+              </div>
+            </div>
+
+            <!-- Smart AI Recommendation Cards -->
+            <div class="ai-recommendations-list" id="ai-recommendations-list">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+
+          <!-- Section 3: Goal Benchmarks Configuration -->
+          <div class="goals-section">
+            <div class="goals-section-header">
+              <h3 class="goals-section-title">Goal Targets & Benchmarks</h3>
+              <span class="goals-section-sub">Adjust your target duration windows, mode WPM benchmarks, and target precision</span>
+            </div>
+
+            <form id="goals-config-form" class="goals-config-grid">
+              <div class="goals-input-group">
+                <label for="input-goal-daily">Daily Goal (mins)</label>
+                <input type="number" id="input-goal-daily" min="1" max="300" class="goals-input" required>
+              </div>
+
+              <div class="goals-input-group">
+                <label for="input-goal-weekly">Weekly Goal (mins)</label>
+                <input type="number" id="input-goal-weekly" min="5" max="2000" class="goals-input" required>
+              </div>
+
+              <div class="goals-input-group">
+                <label for="input-goal-monthly">Monthly Goal (mins)</label>
+                <input type="number" id="input-goal-monthly" min="20" max="10000" class="goals-input" required>
+              </div>
+
+              <div class="goals-input-group">
+                <label for="input-target-speed">Target WPM (Speed Mode)</label>
+                <input type="number" id="input-target-speed" min="20" max="250" class="goals-input" required>
+              </div>
+
+              <div class="goals-input-group">
+                <label for="input-target-accuracy">Target WPM (Symbols Mode)</label>
+                <input type="number" id="input-target-accuracy" min="15" max="200" class="goals-input" required>
+              </div>
+
+              <div class="goals-input-group">
+                <label for="input-target-code">Target WPM (Code Mode)</label>
+                <input type="number" id="input-target-code" min="10" max="180" class="goals-input" required>
+              </div>
+
+              <div class="goals-input-group">
+                <label for="input-target-acc-pct">Target Accuracy (%)</label>
+                <input type="number" id="input-target-acc-pct" min="80" max="100" class="goals-input" required>
+              </div>
+
+              <div class="goals-form-actions">
+                <button type="submit" class="btn-primary goals-save-btn" id="btn-save-goals">
+                  <span>💾</span> Save Benchmarks
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>

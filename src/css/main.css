@@ -44,6 +44,8 @@
   --transition-smooth: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 
   --caret-color: var(--color-accent);
+  font-size: 13.5px;
+
 }
 
 /* ==========================================================================
@@ -204,13 +206,16 @@
    Global Reset & Base Styling
    ========================================================================== */
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-html, body {
+html,
+body {
   min-height: 100vh;
   background-color: var(--bg-primary);
   color: var(--text-primary);
@@ -223,13 +228,23 @@ html, body {
 }
 
 body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  max-height: 100vh;
+  background-color: #f0f4f9;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   position: relative;
-  background-image: 
+  background-image:
     radial-gradient(circle at 50% 0%, var(--bg-secondary) 0%, transparent 70%),
     radial-gradient(circle at 100% 100%, var(--bg-surface) 0%, transparent 50%);
   background-attachment: fixed;
+
 }
 
 /* Scrollbar */
@@ -267,7 +282,9 @@ button {
   color: inherit;
 }
 
-input, textarea, select {
+input,
+textarea,
+select {
   font-family: inherit;
   color: inherit;
 }
@@ -276,11 +293,12 @@ input, textarea, select {
 #app {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  max-width: 1280px;
+  height: 100vh;
+  max-width: 1000px;
   margin: 0 auto;
-  padding: 1.5rem 2rem;
+  padding: 1rem 1.5rem;
   width: 100%;
+  box-sizing: border-box;
 }
 
 @media (max-width: 768px) {

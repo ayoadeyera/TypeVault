@@ -7,8 +7,9 @@ import { generateDrillText } from './modes.js';
 import { TypingEngine } from './engine.js';
 import { ThemeManager, THEMES, FONTS, CARET_STYLES } from './themes.js';
 import { Sound } from './sound.js';
-import { AnalyticsTracker } from './analytics.js';
+import { AnalyticsTracker, DiagnosticsEngine } from './analytics.js';
 import { AuthManager } from './auth.js';
+import { GoalsManager } from './goals.js';
 
 class TypeVaultApp {
   constructor() {
@@ -16,6 +17,7 @@ class TypeVaultApp {
     this.engine = null;
     this.customSnippets = Storage.getCustomSnippets();
     this.activeCustomText = null;
+    this.goalsManager = new GoalsManager();
 
     this.initDOM();
     this.initSoundAndThemes();
@@ -23,6 +25,7 @@ class TypeVaultApp {
     this.initUIListeners();
     this.renderSubControls();
     this.startNewDrill();
+    this.updateGoalsHUD();
 
     // Auth manager — self-wires its own DOM events and manages auth state
     this.authManager = new AuthManager({ onToast: (msg) => this.showToast(msg) });
@@ -97,7 +100,39 @@ class TypeVaultApp {
       toastContainer: document.getElementById('toast-container'),
 
       // Cloud sync badge in results modal
-      cloudSyncBadge: document.getElementById('cloud-sync-badge')
+      cloudSyncBadge: document.getElementById('cloud-sync-badge'),
+
+      // Goals & Diagnostics Elements
+      btnOpenGoals: document.getElementById('btn-open-goals'),
+      headerGoalBadge: document.getElementById('header-goal-badge'),
+      liveGoalHud: document.getElementById('goal-live-hud'),
+      liveGoalTime: document.getElementById('live-goal-time'),
+      liveGoalPct: document.getElementById('live-goal-pct'),
+      liveGoalFill: document.getElementById('live-goal-fill'),
+      goalsModal: document.getElementById('goals-modal'),
+      goalsModalClose: document.getElementById('goals-modal-close'),
+      modalDailyCurr: document.getElementById('modal-daily-curr'),
+      modalDailyTarget: document.getElementById('modal-daily-target'),
+      modalDailyPct: document.getElementById('modal-daily-pct'),
+      modalDailyFill: document.getElementById('modal-daily-fill'),
+      modalWeeklyCurr: document.getElementById('modal-weekly-curr'),
+      modalWeeklyTarget: document.getElementById('modal-weekly-target'),
+      modalWeeklyPct: document.getElementById('modal-weekly-pct'),
+      modalWeeklyFill: document.getElementById('modal-weekly-fill'),
+      modalMonthlyCurr: document.getElementById('modal-monthly-curr'),
+      modalMonthlyTarget: document.getElementById('modal-monthly-target'),
+      modalMonthlyPct: document.getElementById('modal-monthly-pct'),
+      modalMonthlyFill: document.getElementById('modal-monthly-fill'),
+      weakKeysList: document.getElementById('weak-keys-list'),
+      aiRecommendationsList: document.getElementById('ai-recommendations-list'),
+      goalsConfigForm: document.getElementById('goals-config-form'),
+      inputGoalDaily: document.getElementById('input-goal-daily'),
+      inputGoalWeekly: document.getElementById('input-goal-weekly'),
+      inputGoalMonthly: document.getElementById('input-goal-monthly'),
+      inputTargetSpeed: document.getElementById('input-target-speed'),
+      inputTargetAccuracy: document.getElementById('input-target-accuracy'),
+      inputTargetCode: document.getElementById('input-target-code'),
+      inputTargetAccPct: document.getElementById('input-target-acc-pct')
     };
   }
 
@@ -177,8 +212,30 @@ class TypeVaultApp {
         this.closeResultsModal();
         this.closeSettingsDrawer();
         this.closeCustomModal();
+        this.closeGoalsModal();
         this.authManager?.closeModal();
       }
+    });
+
+    // Goals Modal open/close listeners
+    this.dom.btnOpenGoals?.addEventListener('click', () => {
+      this.openGoalsModal();
+    });
+
+    this.dom.goalsModalClose?.addEventListener('click', () => {
+      this.closeGoalsModal();
+    });
+
+    this.dom.goalsModal?.addEventListener('click', (e) => {
+      if (e.target === this.dom.goalsModal) {
+        this.closeGoalsModal();
+      }
+    });
+
+    // Goals configuration form submission
+    this.dom.goalsConfigForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await this.handleSaveGoals();
     });
 
     window.addEventListener('keyup', (e) => {
@@ -442,13 +499,26 @@ class TypeVaultApp {
     this.dom.hudErrors.textContent = metrics.errors;
     this.dom.hudTimer.textContent = metrics.timeDisplay;
     this.dom.sessionProgressFill.style.width = `${metrics.progress}%`;
+
+    // Live Duration Goal calculation (second-by-second)
+    this.updateGoalsHUD(this.engine.timeElapsed);
   }
 
   async handleEngineComplete(results) {
     // 1. Save locally (always, even for guests)
     Storage.saveSessionScore(results);
 
-    // 2. Populate Results Modal
+    // 2. Accumulate practice duration for rolling goals
+    const durationSec = parseFloat(results.timeSeconds) || 0;
+    await this.goalsManager.recordDrillDuration(durationSec);
+
+    // 3. Accumulate keystroke character error analytics
+    Storage.recordCharacterStats(results.errorLog, results.charStats);
+
+    // 4. Refresh live goals HUD and header badge
+    this.updateGoalsHUD();
+
+    // 5. Populate Results Modal
     this.dom.resWpm.textContent = results.wpm;
     this.dom.resRawWpm.textContent = results.rawWpm;
     this.dom.resAcc.textContent = `${results.accuracy}%`;
@@ -459,16 +529,16 @@ class TypeVaultApp {
     this.dom.resExtraChars.textContent = results.extraCharacters;
     this.dom.resMissedChars.textContent = results.missedCharacters;
 
-    // 3. Reset cloud badge from previous session
+    // 6. Reset cloud badge from previous session
     if (this.dom.cloudSyncBadge) this.dom.cloudSyncBadge.hidden = true;
 
-    // 4. Render SVG performance sparkline
+    // 7. Render SVG performance sparkline
     AnalyticsTracker.renderSvgChart(results.samples, this.dom.chartContainer);
 
-    // 5. Open Modal immediately — don't wait for cloud
+    // 8. Open Modal immediately — don't wait for cloud
     this.openResultsModal();
 
-    // 6. Cloud sync (non-blocking — badge appears after modal is open)
+    // 9. Cloud sync typing session (non-blocking — badge appears after modal is open)
     if (this.authManager?.getCurrentUser()) {
       const { success } = await Storage.syncSessionToCloud(results, this.settings.activeMode);
       if (success && this.dom.cloudSyncBadge) {
@@ -648,6 +718,116 @@ class TypeVaultApp {
     this.renderSubControls();
     this.startNewDrill();
     this.showToast('Started custom drill');
+  }
+
+  // ------------------------------------------------------------------------
+  // Goals & Diagnostic Insights Modal Controller
+  // ------------------------------------------------------------------------
+  updateGoalsHUD(activeSecondsInDrill = 0) {
+    if (!this.goalsManager) return;
+    const daily = this.goalsManager.getDailyProgress(activeSecondsInDrill);
+
+    if (this.dom.liveGoalTime) {
+      this.dom.liveGoalTime.textContent = `${daily.currentMinutes} / ${daily.targetMinutes} mins`;
+    }
+    if (this.dom.liveGoalPct) {
+      this.dom.liveGoalPct.textContent = `${daily.percent}%`;
+    }
+    if (this.dom.liveGoalFill) {
+      this.dom.liveGoalFill.style.width = `${daily.percent}%`;
+    }
+    if (this.dom.headerGoalBadge) {
+      this.dom.headerGoalBadge.textContent = `${daily.percent}%`;
+    }
+  }
+
+  openGoalsModal() {
+    this.renderGoalsModalData();
+    this.dom.goalsModal.classList.add('open');
+  }
+
+  closeGoalsModal() {
+    this.dom.goalsModal.classList.remove('open');
+    this.engine.focus();
+  }
+
+  renderGoalsModalData() {
+    this.goalsManager.refresh();
+    const daily = this.goalsManager.getDailyProgress();
+    const weekly = this.goalsManager.getWeeklyProgress();
+    const monthly = this.goalsManager.getMonthlyProgress();
+    const settings = this.goalsManager.getSettings();
+
+    // 1. Progress Windows
+    if (this.dom.modalDailyCurr) this.dom.modalDailyCurr.textContent = daily.currentMinutes;
+    if (this.dom.modalDailyTarget) this.dom.modalDailyTarget.textContent = `${daily.targetMinutes} mins`;
+    if (this.dom.modalDailyPct) this.dom.modalDailyPct.textContent = `${daily.percent}%`;
+    if (this.dom.modalDailyFill) this.dom.modalDailyFill.style.width = `${daily.percent}%`;
+
+    if (this.dom.modalWeeklyCurr) this.dom.modalWeeklyCurr.textContent = weekly.currentMinutes;
+    if (this.dom.modalWeeklyTarget) this.dom.modalWeeklyTarget.textContent = `${weekly.targetMinutes} mins`;
+    if (this.dom.modalWeeklyPct) this.dom.modalWeeklyPct.textContent = `${weekly.percent}%`;
+    if (this.dom.modalWeeklyFill) this.dom.modalWeeklyFill.style.width = `${weekly.percent}%`;
+
+    if (this.dom.modalMonthlyCurr) this.dom.modalMonthlyCurr.textContent = monthly.currentMinutes;
+    if (this.dom.modalMonthlyTarget) this.dom.modalMonthlyTarget.textContent = `${monthly.targetMinutes} mins`;
+    if (this.dom.modalMonthlyPct) this.dom.modalMonthlyPct.textContent = `${monthly.percent}%`;
+    if (this.dom.modalMonthlyFill) this.dom.modalMonthlyFill.style.width = `${monthly.percent}%`;
+
+    // 2. Weakest Keys Section
+    const weakKeys = DiagnosticsEngine.getTopWeakestKeys(4);
+    if (this.dom.weakKeysList) {
+      this.dom.weakKeysList.innerHTML = weakKeys.map(k => `
+        <div class="weak-key-chip" title="${k.errors} errors across ${k.total} keystrokes (${k.accuracy}% accuracy)">
+          <span class="weak-key-badge">${k.label}</span>
+          <span>${k.accuracy}% acc</span>
+          <span class="weak-key-errs">(${k.errors} err)</span>
+        </div>
+      `).join('');
+    }
+
+    // 3. AI Recommendations List
+    const recommendations = DiagnosticsEngine.generateRecommendations();
+    if (this.dom.aiRecommendationsList) {
+      this.dom.aiRecommendationsList.innerHTML = recommendations.map(rec => `
+        <div class="ai-rec-card ${rec.type}">
+          <div class="ai-rec-icon">${rec.icon}</div>
+          <div class="ai-rec-body">
+            <div class="ai-rec-header">
+              <span class="ai-rec-title">${rec.title}</span>
+              <span class="ai-rec-badge">${rec.badge}</span>
+            </div>
+            <p class="ai-rec-text">${rec.text}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // 4. Benchmarks Form Inputs
+    if (this.dom.inputGoalDaily) this.dom.inputGoalDaily.value = settings.dailyMinutes;
+    if (this.dom.inputGoalWeekly) this.dom.inputGoalWeekly.value = settings.weeklyMinutes;
+    if (this.dom.inputGoalMonthly) this.dom.inputGoalMonthly.value = settings.monthlyMinutes;
+    if (this.dom.inputTargetSpeed) this.dom.inputTargetSpeed.value = settings.targetWpmSpeed;
+    if (this.dom.inputTargetAccuracy) this.dom.inputTargetAccuracy.value = settings.targetWpmAccuracy;
+    if (this.dom.inputTargetCode) this.dom.inputTargetCode.value = settings.targetWpmCode;
+    if (this.dom.inputTargetAccPct) this.dom.inputTargetAccPct.value = settings.targetAccuracy;
+  }
+
+  async handleSaveGoals() {
+    const newSettings = {
+      dailyMinutes: parseInt(this.dom.inputGoalDaily.value, 10) || 15,
+      weeklyMinutes: parseInt(this.dom.inputGoalWeekly.value, 10) || 75,
+      monthlyMinutes: parseInt(this.dom.inputGoalMonthly.value, 10) || 300,
+      targetWpmSpeed: parseInt(this.dom.inputTargetSpeed.value, 10) || 80,
+      targetWpmAccuracy: parseInt(this.dom.inputTargetAccuracy.value, 10) || 60,
+      targetWpmCode: parseInt(this.dom.inputTargetCode.value, 10) || 50,
+      targetAccuracy: parseInt(this.dom.inputTargetAccPct.value, 10) || 96
+    };
+
+    await this.goalsManager.updateSettings(newSettings);
+    this.renderGoalsModalData();
+    this.updateGoalsHUD();
+    this.showToast('Goal benchmarks saved & synced!');
   }
 
   // ------------------------------------------------------------------------
